@@ -5,7 +5,7 @@
 // ============================================================
 
 const API = (() => {
-    const BASE_URL = 'http://localhost:8000';
+    const BASE_URL = 'https://fireshield-ai-p41f.onrender.com';
     let authToken = null;
     let wsConnection = null;
     let wsReconnectTimer = null;
