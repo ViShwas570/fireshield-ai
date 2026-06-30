@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireShield AI — Command Center</title>
+    <meta name="description" content="AI-Powered Fire Emergency Response Dashboard for Fire Department Officials">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">🔥</div>
+                <div class="logo-text">
+                    <h1>FireShield</h1>
+                    <span>AI Command Center</span>
+                </div>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-chevron-left"></i></button>
+        </div>
+        
+        <ul class="nav-links">
+            <li class="nav-item active" data-page="dashboard">
+                <a href="#"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            </li>
+            <li class="nav-item" data-page="map">
+                <a href="#"><i class="fas fa-map-marked-alt"></i><span>Live Map</span><span class="badge pulse">LIVE</span></a>
+            </li>
+            <li class="nav-item" data-page="incidents">
+                <a href="#"><i class="fas fa-fire-alt"></i><span>Incidents</span><span class="badge count" id="incidentCount">18</span></a>
+            </li>
+            <li class="nav-item" data-page="analytics">
+                <a href="#"><i class="fas fa-chart-bar"></i><span>Analytics</span></a>
+            </li>
+            <li class="nav-item" data-page="teams">
+                <a href="#"><i class="fas fa-users"></i><span>Teams</span></a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">PS</div>
+                <div class="user-details">
+                    <span class="user-name">Inspector Priya</span>
+                    <span class="user-role">Station Commander</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search incidents, locations..." id="globalSearch">
+                    <kbd>Ctrl+K</kbd>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-status">
+                    <span class="status-dot online"></span>
+                    <span>System Online</span>
+                </div>
+                <button class="icon-btn" id="notifBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notif-badge">3</span>
+                </button>
+                <button class="icon-btn" id="themeBtn">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Page -->
+        <section class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h2><i class="fas fa-th-large"></i> Dashboard Overview</h2>
+                <span class="timestamp" id="lastUpdated">Updated just now</span>
+            </div>
+            
+            <!-- Stats Row -->
+            <div class="stats-grid">
+                <div class="stat-card" style="--accent: var(--primary)">
+                    <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statTotal">18</span>
+                        <span class="stat-label">Total Incidents</span>
+                    </div>
+                    <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+                </div>
+                <div class="stat-card" style="--accent: var(--danger)">
+                    <div class="stat-icon pulse-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statActive">7</span>
+                        <span class="stat-label">Active Emergencies</span>
+                    </div>
+                    <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 3</div>
+                </div>
+                <div class="stat-card" style="--accent: var(--success)">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statResponse">7.3<small>min</small></span>
+                        <span class="stat-label">Avg Response Time</span>
+                    </div>
+                    <div class="stat-trend down"><i class="fas fa-arrow-down"></i> 8%</div>
+                </div>
+                <div class="stat-card" style="--accent: var(--info)">
+                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statResolved">8</span>
+                        <span class="stat-label">Resolved Today</span>
+                    </div>
+                    <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 15%</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-pie"></i> Severity Distribution</h3>
+                    <div class="chart-container"><canvas id="severityChart"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3><i class="fas fa-chart-line"></i> Monthly Trends</h3>
+                    <div class="chart-container"><canvas id="trendChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Recent Incidents + Activity -->
+            <div class="content-grid">
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-list"></i> Recent Incidents</h3>
+                        <button class="btn-sm" onclick="showPage('incidents')">View All</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table" id="recentTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Incident</th>
+                                    <th>Location</th>
+                                    <th>Severity</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="activity-card">
+                    <h3><i class="fas fa-stream"></i> Live Activity Feed</h3>
+                    <div class="activity-feed" id="activityFeed"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Map Page -->
+        <section class="page" id="page-map">
+            <div class="page-header">
+                <h2><i class="fas fa-map-marked-alt"></i> Live Incident Map</h2>
+                <div class="map-controls">
+                    <button class="btn-sm active" id="toggleMarkers" onclick="toggleMapLayer('markers')"><i class="fas fa-map-marker-alt"></i> Markers</button>
+                    <button class="btn-sm" id="toggleHeat" onclick="toggleMapLayer('heat')"><i class="fas fa-fire"></i> Heatmap</button>
+                </div>
+            </div>
+            <div class="map-container">
+                <div id="liveMap" class="live-map"></div>
+                <div class="map-legend">
+                    <h4>Legend</h4>
+                    <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Low (1-2)</div>
+                    <div class="legend-item"><span class="legend-dot" style="background:#eab308"></span> Medium (3)</div>
+                    <div class="legend-item"><span class="legend-dot" style="background:#f97316"></span> High (4)</div>
+                    <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span> Critical (5)</div>
+                    <div class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span> Fire Station</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Incidents Page -->
+        <section class="page" id="page-incidents">
+            <div class="page-header">
+                <h2><i class="fas fa-fire-alt"></i> Incident Management</h2>
+                <button class="btn-primary" onclick="exportCSV()"><i class="fas fa-download"></i> Export CSV</button>
+            </div>
+            <div class="filters-bar">
+                <select id="filterStatus" onchange="filterIncidents()">
+                    <option value="">All Status</option>
+                    <option value="reported">Reported</option>
+                    <option value="acknowledged">Acknowledged</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="en_route">En Route</option>
+                    <option value="arrived">Arrived</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+                <select id="filterSeverity" onchange="filterIncidents()">
+                    <option value="">All Severity</option>
+                    <option value="5">Critical (5)</option>
+                    <option value="4">High (4)</option>
+                    <option value="3">Medium (3)</option>
+                    <option value="2">Low (2)</option>
+                    <option value="1">Minor (1)</option>
+                </select>
+                <input type="text" id="filterSearch" placeholder="Search incidents..." oninput="filterIncidents()">
+            </div>
+            <div class="table-responsive">
+                <table class="data-table full-table" id="incidentsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Location</th>
+                            <th>Category</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Team</th>
+                            <th>Response</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incidentsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Analytics Page -->
+        <section class="page" id="page-analytics">
+            <div class="page-header">
+                <h2><i class="fas fa-chart-bar"></i> Analytics & Insights</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card" style="--accent: var(--primary)">
+                    <div class="stat-icon"><i class="fas fa-fire"></i></div>
+                    <div class="stat-info"><span class="stat-value">156</span><span class="stat-label">Total (6 months)</span></div>
+                </div>
+                <div class="stat-card" style="--accent: var(--success)">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info"><span class="stat-value">7.3<small>min</small></span><span class="stat-label">Avg Response</span></div>
+                </div>
+                <div class="stat-card" style="--accent: var(--info)">
+                    <div class="stat-icon"><i class="fas fa-percentage"></i></div>
+                    <div class="stat-info"><span class="stat-value">94%</span><span class="stat-label">Resolution Rate</span></div>
+                </div>
+                <div class="stat-card" style="--accent: var(--warning)">
+                    <div class="stat-icon"><i class="fas fa-map-pin"></i></div>
+                    <div class="stat-info"><span class="stat-value">Delhi</span><span class="stat-label">Busiest Region</span></div>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card"><h3><i class="fas fa-chart-area"></i> Incidents Over Time</h3><div class="chart-container"><canvas id="timeChart"></canvas></div></div>
+                <div class="chart-card"><h3><i class="fas fa-chart-bar"></i> By City</h3><div class="chart-container"><canvas id="cityChart"></canvas></div></div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card"><h3><i class="fas fa-chart-pie"></i> Fire Types</h3><div class="chart-container"><canvas id="typeChart"></canvas></div></div>
+                <div class="chart-card"><h3><i class="fas fa-stopwatch"></i> Response Time Trend</h3><div class="chart-container"><canvas id="responseChart"></canvas></div></div>
+            </div>
+        </section>
+
+        <!-- Teams Page -->
+        <section class="page" id="page-teams">
+            <div class="page-header">
+                <h2><i class="fas fa-users"></i> Team Management</h2>
+            </div>
+            <div class="teams-grid" id="teamsGrid"></div>
+        </section>
+    </main>
+
+    <!-- Incident Detail Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle">Incident Details</h3>
+                <button class="icon-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
